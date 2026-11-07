@@ -1,0 +1,32 @@
+name: Build iOS Aspect Geometry V3
+on:
+  push:
+    branches: [feature/native-aspect-probe-20261107]
+    paths:
+      - 'native-aspect/ultrawide_probe_v3.m'
+      - '.github/workflows/build-native-aspect-v3.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  build:
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build native iOS ARM64 UIView + CAMetalLayer hook
+        run: |
+          set -euo pipefail
+          xcrun --sdk iphoneos clang -target arm64-apple-ios14.0 -x objective-c -fobjc-arc -fblocks \
+            -dynamiclib -O2 -Werror \
+            -Wl,-install_name,@executable_path/libdeltaaspect.dylib \
+            -framework UIKit -framework Foundation -framework QuartzCore -lobjc \
+            native-aspect/ultrawide_probe_v3.m -o libdeltaaspect.dylib
+          file libdeltaaspect.dylib
+          xcrun otool -L libdeltaaspect.dylib
+          xcrun lipo -info libdeltaaspect.dylib
+          shasum -a 256 libdeltaaspect.dylib
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ios-arm64-aspect-geometry-v3
+          path: libdeltaaspect.dylib
+          retention-days: 7
