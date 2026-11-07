@@ -1,0 +1,29 @@
+name: Build iOS Aspect Probe
+on:
+  push:
+    branches: [feature/native-aspect-probe-20261107]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  build:
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build arm64 iOS dylib with Apple SDK
+        shell: bash
+        run: |
+          set -euo pipefail
+          xcrun --sdk iphoneos clang -target arm64-apple-ios14.0 -dynamiclib -O2 -fno-stack-protector \
+            -Wl,-install_name,@executable_path/libdeltaaspect.dylib \
+            -framework Foundation -framework QuartzCore -lobjc \
+            native-aspect/ultrawide_probe.c -o libdeltaaspect.dylib
+          file libdeltaaspect.dylib
+          xcrun otool -L libdeltaaspect.dylib
+          xcrun lipo -info libdeltaaspect.dylib
+          shasum -a 256 libdeltaaspect.dylib
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ios-arm64-aspect-probe
+          path: libdeltaaspect.dylib
+          retention-days: 7
