@@ -1,0 +1,32 @@
+name: Build iOS Aspect-Fit V2
+on:
+  push:
+    branches: [feature/native-aspect-probe-20261107]
+    paths:
+      - 'native-aspect/ultrawide_probe_v2.c'
+      - '.github/workflows/build-native-aspect-v2.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  build:
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v4
+      - name: Compile and audit native iOS ARM64 library
+        shell: bash
+        run: |
+          set -euo pipefail
+          xcrun --sdk iphoneos clang -target arm64-apple-ios14.0 -dynamiclib -O2 \
+            -Wl,-install_name,@executable_path/libdeltaaspect.dylib \
+            -framework Foundation -framework QuartzCore -framework UIKit -lobjc \
+            native-aspect/ultrawide_probe_v2.c -o libdeltaaspect.dylib
+          file libdeltaaspect.dylib
+          xcrun otool -L libdeltaaspect.dylib
+          xcrun lipo -info libdeltaaspect.dylib
+          shasum -a 256 libdeltaaspect.dylib
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ios-arm64-aspect-fit-v2
+          path: libdeltaaspect.dylib
+          retention-days: 7
