@@ -19,7 +19,7 @@ jobs:
           xcrun --sdk iphoneos clang -target arm64-apple-ios14.0 -x objective-c -fobjc-arc -fblocks \
             -dynamiclib -O2 -Werror \
             -Wl,-install_name,@executable_path/libdeltaaspect.dylib \
-            -framework UIKit -framework Foundation -framework QuartzCore -lobjc \
+            -framework UIKit -framework Foundation -framework QuartzCore -framework CoreGraphics \
             native-aspect/ultrawide_probe_v3.m -o libdeltaaspect.dylib
           file libdeltaaspect.dylib
           xcrun otool -L libdeltaaspect.dylib
